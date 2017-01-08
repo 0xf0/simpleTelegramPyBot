@@ -6,12 +6,21 @@ from time import sleep
 from queue import Queue
 from threading import Thread
 from core import telegram
+from core import commands
 
 
 # format answer message
 def queue_answer(chat_id, text, parse_mode=None, disable_web_page_preview=None, disable_notification=None,
                  reply_markup=None):
     q.put((chat_id, text, parse_mode, disable_web_page_preview, disable_notification, reply_markup))
+
+
+# if command is an alias
+def is_alias(cmd, aliases):
+    for alias in aliases:
+        if alias in cmd:
+            return True
+    return False
 
 
 # telegram chat worker
@@ -26,10 +35,19 @@ def handler():
             for item in u["result"]:
                 data = tg.parse(item)
                 offset = item["update_id"]
+                answered = False
 
                 # here you can do anythig with parsed data in data dict
-                if "/start" in data["text"]:
-                    queue_answer(chat_id=data["chat_id"], text="*Hello!*", parse_mode="Markdown")
+                for k, v in config.TELEGRAM_COMMANDS.items():
+                    if k in data["text"] or is_alias(data["text"], v["aliases"]):
+                        logging.info("exec commands.{}".format(v["cmd"]))
+                        queue_answer(**getattr(commands, v["cmd"])(**data))
+                        answered = True
+                        break
+
+                if not answered:
+                    logging.info("unknown cmd")
+                    queue_answer(**commands.start(**data))
 
 
 # message send queue worker

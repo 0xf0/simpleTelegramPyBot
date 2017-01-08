@@ -11,3 +11,7 @@ TELEGRAM_TOKEN = ""
 TELEGRAM_UPDATE_INTERVAL = 0.5
 # telegram sendMessage interval
 TELEGRAM_SENDMESSAGE_INTERVAL = 1.0
+# commands with descriptions
+TELEGRAM_COMMANDS = {
+    "start": {"aliases": ["help"], "description": "вызов справки", "cmd": "start"}
+}
